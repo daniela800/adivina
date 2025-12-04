@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Adivina el número</title>
+  <style>
+    :root{--bg:#0f172a;--card:#ffffff;--accent:#ef4444;--primary:#06b6d4;--success:#10b981;--warning:#f59e0b}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f172a 0%,#0b1220 50%,#1a1f3a 100%);font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;animation:bgShift 8s ease infinite}
+    @keyframes bgShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+    .card{width:100%;max-width:520px;background:var(--card);border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(2,6,23,.8);border:1px solid rgba(255,255,255,.1);animation:slideIn 0.6s ease-out}
+    @keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    h1{margin:0 0 12px;font-size:32px;color:#0b1220;background:linear-gradient(90deg,#06b6d4,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    p.lead{margin:0 0 20px;color:#4b5563;font-size:15px;line-height:1.6}
+    .controls{display:flex;gap:12px;margin-bottom:16px}
+    input[type=number]{flex:1;padding:14px;border:2px solid #e6e6e6;border-radius:10px;font-size:16px;transition:all 0.3s;background:#f8fafc}
+    input[type=number]:focus{outline:none;border-color:var(--primary);background:white;box-shadow:0 0 0 3px rgba(6,182,212,.1)}
+    button{padding:14px 18px;border-radius:10px;border:0;background:linear-gradient(90deg,var(--primary),#3b82f6);color:white;font-weight:600;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 15px rgba(6,182,212,.3)}
+    button:hover{transform:translateY(-2px);box-shadow:0 6px 25px rgba(6,182,212,.5)}
+    button:active{transform:translateY(0)}
+    button:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+    button.secondary{background:linear-gradient(90deg,#e5e7eb,#d1d5db);color:#374151;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+    button.secondary:hover{background:linear-gradient(90deg,#d1d5db,#bfdbfe);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+    .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:16px}
+    .meta .item{background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);padding:12px;border-radius:10px;color:#0c4a6e;font-weight:700;text-align:center;border:1px solid #bae6fd;box-shadow:0 2px 8px rgba(2,48,71,.1)}
+    .hint{padding:16px;border-radius:12px;background:linear-gradient(135deg,#fef3c7 0%,#fcd34d 100%);color:#78350f;margin-bottom:14px;border-left:6px solid #f59e0b;animation:hintBounce 0.5s ease-out;box-shadow:0 4px 15px rgba(245,158,11,.2)}
+    @keyframes hintBounce{from{transform:translateX(-10px);opacity:0.8}to{transform:translateX(0);opacity:1}}
+    .history{margin-top:14px}
+    .history-label{display:block;font-size:13px;color:#6b7280;font-weight:600;margin-bottom:8px}
+    .history ul{list-style:none;padding:0;margin:0;display:flex;gap:8px;flex-wrap:wrap}
+    .history li{background:linear-gradient(135deg,#dbeafe 0%,#bfdbfe 100%);color:#1e40af;padding:8px 12px;border-radius:999px;font-weight:700;font-size:14px;animation:popIn 0.3s ease-out;border:1px solid #93c5fd}
+    @keyframes popIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
+    .success{background:linear-gradient(135deg,#d1fae5 0%,#a7f3d0 100%);color:#065f46;padding:14px;border-radius:12px;font-weight:700;text-align:center;border:2px solid #6ee7b7;font-size:16px;box-shadow:0 4px 15px rgba(16,185,129,.2)}
+    .gameover{background:linear-gradient(135deg,#fee2e2 0%,#fecaca 100%);color:#7f1d1d;padding:14px;border-radius:12px;font-weight:700;text-align:center;border:2px solid #fca5a5;font-size:16px;box-shadow:0 4px 15px rgba(239,68,68,.2)}
+    .pista{background:linear-gradient(135deg,#fef3c7 0%,#fcd34d 100%);color:#92400e;padding:14px;border-radius:12px;margin-bottom:12px;border-left:6px solid #f59e0b;animation:slideIn 0.4s ease-out;box-shadow:0 4px 12px rgba(245,158,11,.15)}
+    .footer{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid #e5e7eb}
+    .small{font-size:13px;color:#6b7280}
+    #message{font-size:14px;color:#1f2937;font-style:italic;font-weight:500;animation:fadeIn 0.4s ease-out}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @media (max-width:520px){.controls{flex-direction:column}button{width:100%}.meta{grid-template-columns:1fr}.card{padding:24px}h1{font-size:26px}}
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <h1>Adivina el número</h1>
+    <p class="lead">La computadora elige un número entre 1 y 100. Intenta adivinarlo. Recibirás pistas si el número es mayor o menor.</p>
+
+    <div class="meta">
+      <div class="item">Rango: <strong>1 - 100</strong></div>
+      <div class="item">Intentos: <span id="attempts">0</span>/<span id="maxAttempts">10</span></div>
+      <div class="item">Mejor: <span id="best">—</span></div>
+    </div>
+
+    <div class="hint" id="hint">Empieza cuando quieras. ¡Suerte!</div>
+
+    <div class="controls">
+      <input id="guessInput" type="number" min="1" max="100" placeholder="Introduce un número (1-100)">
+      <button id="guessBtn">Adivinar</button>
+      <button id="restartBtn" class="secondary">Reiniciar</button>
+    </div>
+
+    <div class="history">
+      <div class="history-label">📝 Historial de intentos:</div>
+      <ul id="historyList"></ul>
+    </div>
+
+    <div class="footer">
+      <div class="small">Presiona Enter para enviar</div>
+      <div id="message" aria-live="polite"></div>
+    </div>
+  </main>
+
+  <script>
+    (function(){
+      // Estado del juego
+      let secret = null;
+      let attempts = 0;
+      let history = [];
+      const maxAttempts = 10;
+      const min = 1;
+      const max = 100;
+
+      // Elementos del DOM
+      const guessInput = document.getElementById('guessInput');
+      const guessBtn = document.getElementById('guessBtn');
+      const restartBtn = document.getElementById('restartBtn');
+      const hintEl = document.getElementById('hint');
+      const attemptsEl = document.getElementById('attempts');
+      const historyList = document.getElementById('historyList');
+      const messageEl = document.getElementById('message');
+      const bestEl = document.getElementById('best');
+
+      // Pistas progresivas basadas en el número de intentos restantes
+      function getProgressiveHint(remaining){
+        const hints = [
+          ['💡 ¿Es el número par o impar?', '🔢 ¿Es mayor o menor que 50?', '📊 ¿Es divisible entre 5?', '🎯 Esto va a ser más fácil con lógica...'],
+          ['🧠 Piensa en patrones matemáticos...', '📈 ¿Supera los 75?', '🔍 Mírate en un espejo... ¿qué ves? (voltea el número)', '💭 ¿Es múltiplo de 3?'],
+          ['⏰ Se acabó el tiempo de bromear...', '🎪 Este número tiene aires de estrella de cine...', '� La magia está en los detalles...', '🎲 ¿Es de los primeros 25?'],
+          ['🚨 ¡URGENTE! ¿Es mayor que 75?', '🎯 ¡Está. Muy. Cerca!', '⚡ La arena se escurre...', '💥 Última oportunidad próxima...']
+        ];
+
+        if(remaining > 7) return hints[0][Math.floor(Math.random() * hints[0].length)];
+        if(remaining > 5) return hints[1][Math.floor(Math.random() * hints[1].length)];
+        if(remaining > 3) return hints[2][Math.floor(Math.random() * hints[2].length)];
+        if(remaining > 1) return hints[3][Math.floor(Math.random() * hints[3].length)];
+        return '⚠️ Este es tu último intento. ¡Piensa bien!';
+      }
+
+      // Preguntas interactivas para acotar el rango
+      function getGuessingQuestion(){
+        const mid = Math.floor((min + max) / 2);
+        const questions = [
+          '🤔 ¿Crees que es mayor que ' + mid + '?',
+          '🎓 ¿Es un número primo? (solo divisible por 1 y por sí mismo)',
+          '💻 ¿Tiene más de 2 dígitos?',
+          '🔟 ¿Es divisible por 10?',
+          '↕️ ¿Está en la primera mitad del rango?',
+          '🎰 ¿Es un número de la suerte? (tiene dígitos repetidos)',
+          '🌟 ¿Supera al 50?',
+          '🔐 ¿Es un número par?',
+          '🎪 ¿Es menor que 33?',
+          '⚽ ¿Está entre 40 y 70?'
+        ];
+        return questions[Math.floor(Math.random() * questions.length)];
+      }
+
+      // Leer mejor resultado
+      function loadBest(){
+        try{
+          const b = localStorage.getItem('adivina_mejor');
+          if(b) bestEl.textContent = b;
+        }catch(e){}
+      }
+
+      // Guardar mejor resultado
+      function saveBest(value){
+        try{ 
+          localStorage.setItem('adivina_mejor', String(value)); 
+          bestEl.textContent = value;
+        }catch(e){}
+      }
+
+      // Iniciar nuevo juego
+      function newGame(){
+        secret = Math.floor(Math.random() * (max - min + 1)) + min;
+        attempts = 0;
+        history = [];
+        attemptsEl.textContent = attempts;
+        historyList.innerHTML = '';
+        hintEl.innerHTML = '<div class="pista">He elegido un número entre ' + min + ' y ' + max + '. Tienes ' + maxAttempts + ' intentos. ¡Adivina!</div>';
+        messageEl.textContent = '';
+        guessInput.value = '';
+        guessInput.disabled = false;
+        guessBtn.disabled = false;
+        restartBtn.disabled = false;
+        guessInput.focus();
+        console.log('Número secreto (debug):', secret);
+      }
+
+      // Actualizar historial visual
+      function updateHistory(){
+        historyList.innerHTML = '';
+        history.forEach(h => {
+          const li = document.createElement('li');
+          li.textContent = h;
+          historyList.appendChild(li);
+        })
+      }
+
+      // Procesar intento del usuario
+      function onGuess(){
+        if(attempts >= maxAttempts){
+          alert('¡Fin del juego! Has agotado los ' + maxAttempts + ' intentos.');
+          return;
+        }
+
+        const raw = guessInput.value.trim();
+        if(raw === ''){ 
+          alert('Introduce un número'); 
+          return;
+        }
+
+        const val = Number(raw);
+        if(Number.isNaN(val) || !Number.isInteger(val) || val < min || val > max){
+          alert('Introduce un número entero entre ' + min + ' y ' + max);
+          return;
+        }
+
+        attempts += 1;
+        attemptsEl.textContent = attempts;
+        const remaining = maxAttempts - attempts;
+        history.push(val + (val === secret ? ' ✅' : ''));
+        updateHistory();
+
+        // ¡Acertaste!
+        if(val === secret){
+          const celebrationEmojis = ['🎉', '🎊', '✨', '🌟', '🏆', '🎯'];
+          const celebration = celebrationEmojis[Math.floor(Math.random() * celebrationEmojis.length)];
+          hintEl.innerHTML = '<div class="success">' + celebration + ' ¡CORRECTO! ' + celebration + '<br>Has adivinado en <strong>' + attempts + ' intentos</strong>.</div>';
+          messageEl.textContent = '🌈 ¡Felicidades, campeón! Pulsa Reiniciar para jugar otra vez.';
+          guessInput.disabled = true;
+          guessBtn.disabled = true;
+
+          // Actualizar mejor marca
+          const currentBest = Number(localStorage.getItem('adivina_mejor') || '0');
+          if(currentBest === 0 || attempts < currentBest){
+            saveBest(attempts);
+            messageEl.textContent += ' 🏆 ¡NUEVO RÉCORD: ' + attempts + '!';
+          }
+
+          return;
+        }
+
+        // Fin del juego (sin acertar)
+        if(remaining <= 0){
+          hintEl.innerHTML = '<div class="gameover">💥 ¡GAME OVER! 😞<br>El número secreto era: <strong>' + secret + '</strong></div>';
+          messageEl.textContent = '😔 Se acabó el juego. ¡Mejor suerte la próxima vez! Pulsa Reiniciar.';
+          guessInput.disabled = true;
+          guessBtn.disabled = true;
+          return;
+        }
+
+        // Pistas progresivas
+        let hint = 'El número secreto es ' + (val < secret ? 'mayor' : 'menor') + ' que ' + val + '. ';
+        hint += 'Intentos restantes: <strong>' + remaining + '</strong>. ';
+        hint += getProgressiveHint(remaining);
+
+        hintEl.innerHTML = '<div class="pista">' + hint + '</div>';
+        messageEl.textContent = '💭 ' + getGuessingQuestion();
+
+        guessInput.select();
+      }
+
+      // Evento: click en botón Adivinar
+      guessBtn.addEventListener('click', onGuess);
+
+      // Evento: click en botón Reiniciar
+      restartBtn.addEventListener('click', newGame);
+
+      // Evento: presionar Enter
+      guessInput.addEventListener('keydown', function(e){ 
+        if(e.key === 'Enter') onGuess(); 
+      });
+
+      // Inicializar
+      loadBest();
+      newGame();
+
+      // Exponer para debugging
+      window._adivina = { newGame: newGame };
+    })();
+  </script>
+</body>
+</html>
